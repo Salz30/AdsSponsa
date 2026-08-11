@@ -1,0 +1,54 @@
+{
+  "name": "sponsor-desk",
+  "version": "1.0.0",
+  "description": "AdSlot Manager — Sistem Manajemen Direct Sponsorship & Slot Media Lokal",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.3",
+    "@hookform/resolvers": "^5.7.1",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@supabase/supabase-js": "^2.112.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@tanstack/react-table": "^9.0.0",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "autoprefixer": "^10.5.4",
+    "bcryptjs": "^3.0.3",
+    "date-fns": "^4.4.0",
+    "dotenv": "^17.4.2",
+    "next": "^16.3.0",
+    "next-auth": "^5.0.0-beta.32",
+    "pg": "^8.22.0",
+    "postcss": "^8.5.25",
+    "prisma": "^7.9.1",
+    "react": "^19.2.8",
+    "react-day-picker": "^10.0.1",
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.84.0",
+    "sonner": "^2.0.7",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.8",
+    "typescript": "^7.0.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.20.4"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

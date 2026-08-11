@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.npm
+
+# Next.js
+.next/
+out/
+
+# Environment variables (JANGAN commit ke git!)
+.env
+.env.local
+.env.*.local
+
+# Prisma
+# (Note: prisma/migrations/ JANGAN di-ignore agar histori database tersimpan)
+*.db
+*.db-journal
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
