@@ -4,6 +4,7 @@ import { BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS, formatRupiah, formatDate 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import CancelBookingButton from '@/components/cancel-booking-button'
 
 export const revalidate = 0
 
@@ -94,11 +95,17 @@ export default async function ClientTrackingPage({
             </p>
           </div>
 
-          <div className="text-right">
-            <span className="block text-xs text-purple-300">Total Biaya Kampanye</span>
-            <span className="text-xl font-extrabold text-green-400">
-              {formatRupiah(Number(booking.totalPrice))}
-            </span>
+          <div className="text-right flex flex-col items-end gap-3">
+            <div>
+              <span className="block text-xs text-purple-300">Total Biaya Kampanye</span>
+              <span className="text-xl font-extrabold text-green-400">
+                {formatRupiah(Number(booking.totalPrice))}
+              </span>
+            </div>
+            
+            {(booking.status === 'PENDING_PAYMENT' || booking.status === 'PENDING_REVIEW') && (
+              <CancelBookingButton bookingId={booking.id} />
+            )}
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS, formatRupiah, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { swalTheme, showLoadingAlert, showSuccessAlert, showErrorAlert } from '@/lib/swal'
 
 interface BookingData {
   id: number
@@ -51,7 +52,21 @@ export default function AdminDashboardTable({
 
   const handleAction = async (action: 'APPROVE' | 'REJECT') => {
     if (!selectedBooking) return
-    setActionLoading(true)
+
+    const result = await swalTheme.fire({
+      title: action === 'APPROVE' ? 'Setujui Pesanan?' : 'Tolak Pesanan?',
+      text: action === 'APPROVE' 
+        ? 'Pesanan ini akan dijadwalkan dan siap tayang.' 
+        : 'Pesanan ini akan ditolak dan dikembalikan ke pengiklan.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: action === 'APPROVE' ? 'Ya, Setujui' : 'Ya, Tolak',
+      cancelButtonText: 'Batal',
+    })
+
+    if (!result.isConfirmed) return
+
+    showLoadingAlert()
 
     try {
       const res = await fetch(`/api/admin/bookings/${selectedBooking.id}/status`, {
@@ -66,12 +81,11 @@ export default function AdminDashboardTable({
       const data = await res.json()
 
       if (!res.ok) {
-        toast.error(data.message || 'Gagal memproses aksi.')
-        setActionLoading(false)
+        showErrorAlert('Gagal memproses aksi', data.message)
         return
       }
 
-      toast.success(data.message)
+      showSuccessAlert('Berhasil', data.message)
       setBookings((prev) =>
         prev.map((b) =>
           b.id === selectedBooking.id
@@ -86,10 +100,42 @@ export default function AdminDashboardTable({
 
       setSelectedBooking(null)
       setRejectionReason('')
-      setActionLoading(false)
     } catch {
-      toast.error('Terjadi kesalahan koneksi.')
-      setActionLoading(false)
+      showErrorAlert('Terjadi kesalahan koneksi.')
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    const result = await swalTheme.fire({
+      title: 'Hapus Pesanan Permanen?',
+      text: 'Semua data terkait termasuk materi iklan dan bukti bayar akan ikut terhapus.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#e11d48', // rose-600
+    })
+
+    if (!result.isConfirmed) return
+
+    showLoadingAlert('Menghapus...')
+
+    try {
+      const res = await fetch(`/api/admin/bookings/${id}`, {
+        method: 'DELETE',
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        showErrorAlert('Gagal', data.message)
+        return
+      }
+
+      showSuccessAlert('Dihapus', data.message)
+      setBookings((prev) => prev.filter((b) => b.id !== id))
+    } catch {
+      showErrorAlert('Terjadi kesalahan koneksi.')
     }
   }
 
@@ -157,21 +203,28 @@ export default function AdminDashboardTable({
                 <span className="text-purple-200/90 text-xs">{formatDate(b.startDate)} - {formatDate(b.endDate)}</span>
               </div>
 
-              <div className="pt-3 border-t border-white/10 flex gap-2">
+              <div className="pt-3 border-t border-white/10 flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedBooking(b)}
-                  className="flex-1 px-3 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg font-bold text-[11px] shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 min-w-[100px] px-3 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg font-bold text-[11px] shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-1.5"
                 >
-                  <span>🔍 Review & Detail</span>
+                  <span>🔍 Review</span>
                 </button>
                 {['SCHEDULED', 'LIVE', 'COMPLETED'].includes(b.status) && (
                   <Link
                     href={`/admin/bookings/${b.id}/proof`}
-                    className="flex-1 px-3 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-1 min-w-[100px] px-3 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5"
                   >
-                    <span>📸 Proof Tayang</span>
+                    <span>📸 Proof</span>
                   </Link>
                 )}
+                <button
+                  onClick={() => handleDelete(b.id)}
+                  className="flex-none px-3 py-2.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 rounded-lg font-bold text-[11px] shadow-md transition-all flex items-center justify-center gap-1.5"
+                  title="Hapus Pesanan"
+                >
+                  🗑️
+                </button>
               </div>
             </div>
           ))
@@ -234,16 +287,23 @@ export default function AdminDashboardTable({
                       onClick={() => setSelectedBooking(b)}
                       className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold text-[11px] shadow-md shadow-purple-600/20 transition-all inline-flex items-center gap-1"
                     >
-                      <span>🔍 Review & Detail</span>
+                      <span>🔍 Review</span>
                     </button>
                     {['SCHEDULED', 'LIVE', 'COMPLETED'].includes(b.status) && (
                       <Link
                         href={`/admin/bookings/${b.id}/proof`}
                         className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-[11px] shadow-md shadow-emerald-600/20 transition-all inline-flex items-center gap-1"
                       >
-                        <span>📸 Proof Tayang</span>
+                        <span>📸 Proof</span>
                       </Link>
                     )}
+                    <button
+                      onClick={() => handleDelete(b.id)}
+                      className="px-3.5 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 rounded-xl font-bold text-[11px] shadow-md transition-all inline-flex items-center gap-1"
+                      title="Hapus"
+                    >
+                      <span>🗑️</span>
+                    </button>
                   </td>
                 </tr>
               ))
@@ -403,14 +463,12 @@ export default function AdminDashboardTable({
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button
                     onClick={() => handleAction('REJECT')}
-                    disabled={actionLoading}
                     className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all"
                   >
                     🚫 Tolak Booking
                   </button>
                   <button
                     onClick={() => handleAction('APPROVE')}
-                    disabled={actionLoading}
                     className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all"
                   >
                     ✅ Setujui & Jadwalkan

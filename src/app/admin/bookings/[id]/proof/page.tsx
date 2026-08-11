@@ -4,7 +4,7 @@ import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/navbar'
 import Link from 'next/link'
-import { toast } from 'sonner'
+import { swalTheme, showLoadingAlert, showErrorAlert, showSuccessAlert } from '@/lib/swal'
 
 export default function AdminUploadProofPage({
   params,
@@ -23,7 +23,7 @@ export default function AdminUploadProofPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    showLoadingAlert('Mempublikasikan...')
 
     try {
       const formData = new FormData()
@@ -40,15 +40,22 @@ export default function AdminUploadProofPage({
       const data = await res.json()
 
       if (!res.ok) {
-        toast.error(data.message || 'Gagal menerbitkan bukti tayang.')
+        showErrorAlert('Gagal', data.message || 'Gagal menerbitkan bukti tayang.')
         setLoading(false)
         return
       }
 
-      toast.success('Bukti tayang iklan berhasil diterbitkan!')
+      await swalTheme.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Bukti tayang iklan berhasil diterbitkan.',
+        iconColor: '#34d399',
+        timer: 2000,
+        showConfirmButton: false
+      })
       router.push('/admin/dashboard')
     } catch {
-      toast.error('Terjadi kesalahan koneksi.')
+      showErrorAlert('Terjadi kesalahan koneksi.')
       setLoading(false)
     }
   }

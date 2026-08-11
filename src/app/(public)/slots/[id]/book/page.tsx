@@ -4,8 +4,8 @@ import { useState, use, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/navbar'
 import Link from 'next/link'
-import { toast } from 'sonner'
 import { calculateDays, formatRupiah } from '@/lib/utils'
+import { showLoadingAlert, showSuccessAlert, showErrorAlert, swalTheme } from '@/lib/swal'
 
 import { useSession } from 'next-auth/react'
 
@@ -43,11 +43,11 @@ function BookingWizard({ slotId }: { slotId: number }) {
   const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!assetFile || !paymentProofFile) {
-      toast.error('Harap unggah berkas materi iklan dan bukti transfer.')
+      showErrorAlert('Berkas Tidak Lengkap', 'Harap unggah berkas materi iklan dan bukti transfer.')
       return
     }
 
-    setLoading(true)
+    showLoadingAlert('Mengirim Pemesanan...')
 
     try {
       const formData = new FormData()
@@ -70,15 +70,23 @@ function BookingWizard({ slotId }: { slotId: number }) {
       const data = await res.json()
 
       if (!res.ok) {
-        toast.error(data.message || 'Pemesanan gagal dibuat.')
+        showErrorAlert('Gagal', data.message || 'Pemesanan gagal dibuat.')
         setLoading(false)
         return
       }
 
-      toast.success('Pemesanan berhasil dibuat! Mengalihkan ke portal tracking...')
+      await swalTheme.fire({
+        icon: 'success',
+        title: 'Berhasil Dibuat!',
+        text: 'Mengalihkan ke portal tracking pemesanan Anda...',
+        iconColor: '#34d399',
+        timer: 2000,
+        showConfirmButton: false
+      })
+      
       router.push(`/track/${data.bookingCode}`)
     } catch {
-      toast.error('Terjadi kesalahan koneksi saat mengirim pemesanan.')
+      showErrorAlert('Terjadi kesalahan koneksi saat mengirim pemesanan.')
       setLoading(false)
     }
   }

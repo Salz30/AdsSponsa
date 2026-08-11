@@ -4,11 +4,22 @@ import pg from 'pg'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
+  pool: pg.Pool | undefined
 }
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL
-  const pool = new pg.Pool({ connectionString })
+  
+  // Strict connection pooling for Next.js Serverless & Dev mode
+  const pool = globalForPrisma.pool ?? new pg.Pool({ 
+    connectionString, 
+    max: 2, // Very strict limit per thread
+    idleTimeoutMillis: 3000, // Drop idle connections quickly
+    allowExitOnIdle: true 
+  })
+  
+  if (process.env.NODE_ENV !== 'production') globalForPrisma.pool = pool
+  
   const adapter = new PrismaPg(pool)
   return new PrismaClient({
     adapter,
@@ -18,4 +29,7 @@ function createPrismaClient() {
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+}
+
