@@ -12,19 +12,19 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Sponsor Desk — Platform Reservasi Slot Iklan Media Lokal',
-    template: '%s | Sponsor Desk',
+    default: 'Adsponsa — Platform Reservasi Slot Iklan Media Lokal',
+    template: '%s | Adsponsa',
   },
   description:
     'Platform self-service reservasi slot iklan terpadu untuk media lokal dan independen. Dari pemesanan hingga bukti tayang, semua dalam satu dashboard.',
   keywords: ['slot iklan', 'sponsorship', 'media lokal', 'iklan podcast', 'newsletter sponsorship'],
-  authors: [{ name: 'Sponsor Desk' }],
+  authors: [{ name: 'Adsponsa' }],
   openGraph: {
     type: 'website',
     locale: 'id_ID',
     url: process.env.NEXT_PUBLIC_APP_URL,
-    siteName: 'Sponsor Desk',
-    title: 'Sponsor Desk — Platform Reservasi Slot Iklan Media Lokal',
+    siteName: 'Adsponsa',
+    title: 'Adsponsa — Platform Reservasi Slot Iklan Media Lokal',
     description:
       'Platform self-service reservasi slot iklan terpadu untuk media lokal dan independen.',
   },

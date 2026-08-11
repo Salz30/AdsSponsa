@@ -12,17 +12,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const slotId = parseInt(id, 10)
   
-  if (isNaN(slotId)) return { title: 'Slot Iklan Media | Sponsor Desk' }
+  if (isNaN(slotId)) return { title: 'Slot Iklan Media | Adsponsa' }
   
   const slot = await prisma.adSlot.findUnique({
     where: { id: slotId },
     select: { title: true }
   })
   
-  if (!slot) return { title: 'Slot Iklan Media | Sponsor Desk' }
+  if (!slot) return { title: 'Slot Iklan Media | Adsponsa' }
   
   return {
-    title: `${slot.title} — Slot Iklan Media | Sponsor Desk`,
+    title: `${slot.title} — Slot Iklan Media | Adsponsa`,
   }
 }
 

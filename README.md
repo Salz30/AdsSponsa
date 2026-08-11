@@ -1,6 +1,6 @@
-# Sponsor Desk 🚀
+# Adsponsa 🚀
 
-Sponsor Desk adalah **Sistem Manajemen Direct Sponsorship & Slot Media Lokal**. Aplikasi ini dibangun untuk memudahkan pengiklan (Advertiser) dalam memesan slot iklan (banner, newsletter, podcast, social media) dan bagi Pemilik Media (Admin/Media Owner) untuk mengelola persetujuan iklan, memantau pembayaran, dan menerbitkan bukti tayang secara terpusat.
+Adsponsa adalah **Sistem Manajemen Direct Sponsorship & Slot Media Lokal**. Aplikasi ini dibangun untuk memudahkan pengiklan (Advertiser) dalam memesan slot iklan (banner, newsletter, podcast, social media) dan bagi Pemilik Media (Admin/Media Owner) untuk mengelola persetujuan iklan, memantau pembayaran, dan menerbitkan bukti tayang secara terpusat.
 
 ## 🌟 Fitur Utama
 
@@ -29,7 +29,7 @@ Ikuti langkah-langkah di bawah ini untuk menjalankan proyek secara lokal:
 ### 1. Kloning Repository
 ```bash
 git clone https://github.com/USERNAME-ANDA/sponsor-desk.git
-cd "Sponsor Desk"
+cd "Adsponsa"
 ```
 
 ### 2. Instalasi Dependensi

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Cek Status Booking | Sponsor Desk',
-  description: 'Lacak status kampanye iklan dan pesanan Anda di Sponsor Desk.',
+  title: 'Cek Status Booking | Adsponsa',
+  description: 'Lacak status kampanye iklan dan pesanan Anda di Adsponsa.',
 }
 
 export default function TrackLayout({ children }: { children: React.ReactNode }) {

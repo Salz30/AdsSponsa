@@ -19,7 +19,7 @@ export default function Navbar() {
           </div>
           <div>
             <span className="text-xl font-bold bg-gradient-to-r from-white via-purple-200 to-indigo-200 bg-clip-text text-transparent">
-              Sponsor Desk
+              Adsponsa
             </span>
             <span className="block text-[10px] text-purple-400 font-medium tracking-wider uppercase">
               AdSlot Manager

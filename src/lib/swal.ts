@@ -3,7 +3,7 @@ import withReactContent from 'sweetalert2-react-content'
 
 const MySwal = withReactContent(Swal)
 
-// Konfigurasi khusus untuk menyesuaikan dengan tema gelap / glassmorphism Sponsor Desk
+// Konfigurasi khusus untuk menyesuaikan dengan tema gelap / glassmorphism Adsponsa
 export const swalTheme = MySwal.mixin({
   background: '#0f172a', // slate-900
   color: '#f8fafc', // slate-50

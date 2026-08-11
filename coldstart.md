@@ -1,13 +1,13 @@
-# Coldstart Project Document: Sponsor Desk (AdSlot Manager)
+# Coldstart Project Document: Adsponsa (AdSlot Manager)
 
-Dokumen ini adalah catatan terpusat proyek **Sponsor Desk** mengikuti panduan **SOP Vibe Coding Ver 1.1**.
+Dokumen ini adalah catatan terpusat proyek **Adsponsa** mengikuti panduan **SOP Vibe Coding Ver 1.1**.
 
 ---
 
 ## 📌 STEP 0 — Ide & Kategori Aplikasi
 
 * **Kategori Web App:** Productivity / Business Helper / Direct Sponsorship Management
-* **Nama Aplikasi:** **Sponsor Desk** (AdSlot Manager)
+* **Nama Aplikasi:** **Adsponsa** (AdSlot Manager)
 * **Deskripsi Singkat:** Web application *self-service* reservasi slot iklan dan *inventory management* terpadu untuk penerbit media lokal, pengelola podcast, newsletter, dan sosial media.
 
 ---

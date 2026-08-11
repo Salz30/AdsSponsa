@@ -1,11 +1,11 @@
 # Product Requirement Document (PRD) & Entity Relationship Diagram (ERD)
-## Sistem Manajemen Direct Sponsorship & Slot Media Lokal (Sponsor Desk)
+## Sistem Manajemen Direct Sponsorship & Slot Media Lokal (Adsponsa)
 
 ---
 
 ## 1. Document Overview & Metadata
 
-* **Project Name:** Sponsor Desk (Sistem Manajemen Direct Sponsorship & Slot Media Lokal)
+* **Project Name:** Adsponsa (Sistem Manajemen Direct Sponsorship & Slot Media Lokal)
 * **Document Version:** 1.0.0
 * **Author:** Lead Product Developer
 * **Status:** Approved / Ready for Development

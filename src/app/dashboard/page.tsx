@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Pesanan Saya | Sponsor Desk' }
+export const metadata: Metadata = { title: 'Pesanan Saya | Adsponsa' }
 
 export const revalidate = 0
 

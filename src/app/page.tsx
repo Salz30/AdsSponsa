@@ -209,7 +209,7 @@ export default async function HomePage({
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 bg-slate-950 text-center text-xs text-purple-300/60">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 Sponsor Desk — AdSlot Manager System. All rights reserved.</p>
+          <p>© 2026 Adsponsa — AdSlot Manager System. All rights reserved.</p>
         </div>
       </footer>
     </div>

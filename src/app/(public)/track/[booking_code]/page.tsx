@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ booking_c
   const { booking_code } = await params
   
   return {
-    title: `Tracking Kampanye #${booking_code} | Sponsor Desk`,
+    title: `Tracking Kampanye #${booking_code} | Adsponsa`,
   }
 }
 

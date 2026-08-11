@@ -128,7 +128,7 @@ export default function LoginPage() {
             <span className="text-2xl">📢</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-purple-200 to-indigo-200 bg-clip-text text-transparent">
-            Sponsor Desk
+            Adsponsa
           </h1>
           <p className="text-sm text-purple-200/80 mt-1">
             Masuk ke portal manajemen slot media Anda
