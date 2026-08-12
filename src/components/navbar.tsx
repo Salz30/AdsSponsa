@@ -9,6 +9,12 @@ export default function Navbar() {
   const user = session?.user
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  const handleLogout = async () => {
+    setIsMobileMenuOpen(false)
+    await signOut({ redirect: false })
+    window.location.href = '/login'
+  }
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -73,7 +79,7 @@ export default function Navbar() {
                 </span>
               </div>
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={handleLogout}
                 className="px-3.5 py-1.5 text-xs font-semibold text-rose-300 hover:text-white bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 rounded-lg transition-all"
               >
                 Keluar
@@ -170,10 +176,7 @@ export default function Navbar() {
                 </span>
               </div>
               <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false)
-                  signOut({ callbackUrl: '/' })
-                }}
+                onClick={handleLogout}
                 className="px-4 py-2 text-sm font-semibold text-rose-300 hover:text-white bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 rounded-lg transition-all"
               >
                 Keluar
