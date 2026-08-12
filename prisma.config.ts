@@ -1,10 +1,13 @@
 import 'dotenv/config'
-import { defineConfig } from 'prisma/config'
+import { defineConfig, env } from 'prisma/config'
 
-// NOTE: DATABASE_URL and DIRECT_URL are now declared directly in
-// prisma/schema.prisma via env() so Prisma Client can read them at runtime
-// (including on Vercel serverless).  This config file is only used by the
-// Prisma CLI (migrate, studio, generate) and references the schema path.
+// prisma.config.ts digunakan oleh Prisma CLI (migrate, generate, studio).
+// Runtime PrismaClient membaca DATABASE_URL langsung via pg.Pool di src/lib/prisma.ts
+// menggunakan PrismaPg adapter — tidak memerlukan directUrl di sini karena
+// koneksi dikelola sepenuhnya oleh pg.Pool, bukan oleh Prisma native driver.
 export default defineConfig({
   schema: 'prisma/schema.prisma',
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
 })
