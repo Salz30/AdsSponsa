@@ -22,11 +22,18 @@ function createPrismaClient() {
     globalForPrisma.pool ??
     new pg.Pool({
       connectionString,
-      // Keep the pool small — serverless functions are short-lived and a large
-      // pool would hold connections open unnecessarily between invocations.
+      // Keep the pool small — serverless functions are short-lived.
       max: 2,
       idleTimeoutMillis: 3000,
       allowExitOnIdle: true,
+      // Fail fast (5s) instead of hanging forever when DB is unreachable.
+      // Without this, Vercel functions silently time out with no feedback.
+      connectionTimeoutMillis: 5000,
+      // Supabase requires SSL in production. rejectUnauthorized: false is safe
+      // here because the host verification is handled by Supabase's CA.
+      ssl: process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
     })
 
   // Only cache the pool in development/test to avoid leaking connections in

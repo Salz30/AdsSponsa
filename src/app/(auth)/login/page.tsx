@@ -53,11 +53,21 @@ function LoginForm() {
     setIsLoading(true)
 
     try {
-      const res = await signIn('credentials', {
+      // Race signIn against an 8-second timeout so the UI never hangs
+      // indefinitely if the Vercel function or database is unreachable.
+      const signInPromise = signIn('credentials', {
         email,
         password,
         redirect: false,
       })
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Koneksi server timeout. Coba lagi.')),
+          8000
+        )
+      )
+
+      const res = await Promise.race([signInPromise, timeoutPromise])
 
       if (res?.error) {
         const message = getErrorMessage(res.error)

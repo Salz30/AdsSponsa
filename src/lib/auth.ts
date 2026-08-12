@@ -51,24 +51,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        })
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          })
 
-        if (!user) return null
+          if (!user) return null
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        )
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password as string,
+            user.passwordHash
+          )
 
-        if (!isPasswordValid) return null
+          if (!isPasswordValid) return null
 
-        return {
-          id: user.id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
+          return {
+            id: user.id.toString(),
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }
+        } catch (error) {
+          // Log the real error for Vercel Functions logs, return null to
+          // trigger a CredentialsSignin error in the UI instead of hanging.
+          console.error('[NextAuth] authorize — DB error:', error)
+          return null
         }
       },
     }),
