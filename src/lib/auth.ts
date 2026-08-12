@@ -19,6 +19,13 @@ function resolveUrl(): string {
 const isProduction = process.env.NODE_ENV === 'production'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // trustHost: true is REQUIRED on Vercel.
+  // Without it, NextAuth compares the request origin against NEXTAUTH_URL.
+  // On Vercel, VERCEL_URL is the deployment-specific URL (e.g. ads-sponsa-abc.vercel.app)
+  // but users access the production alias (e.g. ads-sponsa.vercel.app).
+  // This mismatch causes CSRF validation to silently reject every login attempt.
+  trustHost: true,
+
   secret: process.env.NEXTAUTH_SECRET,
 
   // ── Cookie configuration ──────────────────────────────────────────────────
