@@ -6,9 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  // Connection URL is now configured in prisma.config.ts (Prisma v7+)
-  // See: https://pris.ly/d/config-datasource
+  provider  = "postgresql"
+  // DATABASE_URL  — pooled connection (Supabase pgBouncer port :6543)
+  // DIRECT_URL    — direct connection (Supabase port :5432), used by Prisma Migrate
+  //                 and operations requiring a true connection (e.g. transactions).
+  //                 If you are NOT using a connection pooler, set DIRECT_URL = DATABASE_URL.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================================

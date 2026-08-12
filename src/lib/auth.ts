@@ -4,7 +4,41 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { Role } from '@prisma/client'
 
+/**
+ * Resolve the canonical URL for NextAuth.
+ * - Development  : http://localhost:3000
+ * - Vercel (no custom domain): https://<random>.vercel.app  (via VERCEL_URL)
+ * - Production with custom domain: value of NEXTAUTH_URL env var
+ */
+function resolveUrl(): string {
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return 'http://localhost:3000'
+}
+
+const isProduction = process.env.NODE_ENV === 'production'
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET,
+
+  // ── Cookie configuration ──────────────────────────────────────────────────
+  // Vercel production runs over HTTPS; we need the __Secure- prefix and
+  // secure=true so the browser actually stores the session cookie.
+  useSecureCookies: isProduction,
+  cookies: {
+    sessionToken: {
+      name: isProduction
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax' as const,
+        path: '/',
+        secure: isProduction,
+      },
+    },
+  },
+
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -39,32 +73,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        // Explicitly persist id and role into the JWT token
         token.id = user.id
-        token.role = (user as { role: Role }).role
+        token.role = (user as { id: string; name: string; email: string; role: Role }).role
       }
       return token
     },
     async session({ session, token }) {
       if (token) {
+        // Forward id and role from token into the session object
         session.user.id = token.id as string
         session.user.role = token.role as Role
       }
       return session
     },
   },
+
   pages: {
     signIn: '/login',
+    error: '/login', // Redirect auth errors back to /login?error=<code>
   },
+
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 })
 
-// Type augmentation for session
+// ── Type augmentation ─────────────────────────────────────────────────────────
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -75,3 +115,6 @@ declare module 'next-auth' {
     }
   }
 }
+
+// Export resolved URL so other modules can reference it if needed
+export const authUrl = resolveUrl()
