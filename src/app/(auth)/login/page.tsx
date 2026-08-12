@@ -69,8 +69,11 @@ function LoginForm() {
 
       const res = await Promise.race([signInPromise, timeoutPromise])
 
-      if (res?.error) {
-        const message = getErrorMessage(res.error)
+      // NextAuth can return {ok: false, error: null} on server errors (e.g. 500).
+      // We must check both conditions — not just res?.error.
+      if (!res?.ok || res?.error) {
+        const code = res?.error ?? 'Default'
+        const message = getErrorMessage(code)
         toast.error(message ?? AUTH_ERROR_MESSAGES.Default)
         setIsLoading(false)
         return
