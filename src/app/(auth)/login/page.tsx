@@ -81,14 +81,15 @@ function LoginForm() {
 
       toast.success('Selamat datang kembali! Mengalihkan...')
 
-      // Determine redirect target based on role
-      const sessionRes = await fetch('/api/auth/session').then((r) => r.json())
-      if (sessionRes?.user?.role === 'ADMIN') {
-        router.push('/admin/dashboard')
-      } else {
-        router.push(callbackUrl)
+      // Determine redirect target and perform full page navigation so that
+      // the newly set HTTP-only session cookie is sent cleanly with HTTP headers.
+      try {
+        const sessionRes = await fetch('/api/auth/session').then((r) => r.json()).catch(() => null)
+        const target = sessionRes?.user?.role === 'ADMIN' ? '/admin/dashboard' : callbackUrl
+        window.location.href = target
+      } catch {
+        window.location.href = callbackUrl
       }
-      router.refresh()
     } catch {
       toast.error('Terjadi kesalahan jaringan. Periksa koneksi Anda dan coba lagi.')
       setIsLoading(false)
