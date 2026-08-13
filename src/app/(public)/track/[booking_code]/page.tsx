@@ -23,17 +23,22 @@ export default async function ClientTrackingPage({
 }) {
   const { booking_code } = await params
 
-  const booking = await prisma.booking.findUnique({
-    where: { bookingCode: booking_code },
-    include: {
-      adSlot: true,
-      assets: true,
-      payment: true,
-      proofs: {
-        orderBy: { uploadedAt: 'desc' },
+  let booking: any = null
+  try {
+    booking = await prisma.booking.findUnique({
+      where: { bookingCode: booking_code },
+      include: {
+        adSlot: true,
+        assets: true,
+        payment: true,
+        proofs: {
+          orderBy: { uploadedAt: 'desc' },
+        },
       },
-    },
-  })
+    })
+  } catch (err) {
+    console.error('[ClientTrackingPage] Database Query Error:', err)
+  }
 
   if (!booking) notFound()
 
@@ -214,7 +219,7 @@ export default async function ClientTrackingPage({
               </div>
             ) : (
               <div className="space-y-3">
-                {booking.proofs.map((proof) => (
+                {booking.proofs.map((proof: any) => (
                   <div
                     key={proof.id}
                     className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-2 text-xs"

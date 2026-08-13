@@ -20,15 +20,20 @@ export default async function AdvertiserDashboardPage() {
   }
 
   const userId = parseInt(session.user.id, 10)
+  let bookings: any[] = []
 
-  const bookings = await prisma.booking.findMany({
-    where: { userId },
-    include: {
-      adSlot: true,
-      proofs: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  })
+  try {
+    bookings = await prisma.booking.findMany({
+      where: { userId },
+      include: {
+        adSlot: true,
+        proofs: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+  } catch (err) {
+    console.error('[AdvertiserDashboard] Database Query Error:', err)
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col">

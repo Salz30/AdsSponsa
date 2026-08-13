@@ -32,41 +32,48 @@ export default async function AdminDashboardPage({
 
   const where = currentStatus !== 'ALL' ? { status: currentStatus as any } : {}
 
-  // Metrics Calculation
-  const totalBookings = await prisma.booking.count()
-  const pendingReviewCount = await prisma.booking.count({
-    where: { status: 'PENDING_REVIEW' },
-  })
-  const activeCount = await prisma.booking.count({
-    where: { status: { in: ['SCHEDULED', 'LIVE'] } },
-  })
+  let totalBookings = 0
+  let pendingReviewCount = 0
+  let activeCount = 0
+  let totalEarnings = 0
+  let totalItems = 0
+  let totalPages = 1
+  let bookings: any[] = []
 
-  // Total Earnings from Verified Payments
-  const verifiedPayments = await prisma.payment.aggregate({
-    where: { status: 'VERIFIED' },
-    _sum: { amount: true },
-  })
+  try {
+    totalBookings = await prisma.booking.count()
+    pendingReviewCount = await prisma.booking.count({
+      where: { status: 'PENDING_REVIEW' },
+    })
+    activeCount = await prisma.booking.count({
+      where: { status: { in: ['SCHEDULED', 'LIVE'] } },
+    })
 
-  const totalEarnings = Number(verifiedPayments._sum.amount || 0)
+    const verifiedPayments = await prisma.payment.aggregate({
+      where: { status: 'VERIFIED' },
+      _sum: { amount: true },
+    })
+    totalEarnings = Number(verifiedPayments._sum.amount || 0)
 
-  // Get total count for pagination
-  const totalItems = await prisma.booking.count({ where })
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
+    totalItems = await prisma.booking.count({ where })
+    totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE))
 
-  // Fetch all bookings for table
-  const bookings = await prisma.booking.findMany({
-    where,
-    include: {
-      user: { select: { name: true, email: true, phoneNumber: true } },
-      adSlot: { select: { title: true, category: true, pricePerDay: true } },
-      assets: true,
-      payment: true,
-      proofs: true,
-    },
-    orderBy: { createdAt: 'desc' },
-    skip,
-    take,
-  })
+    bookings = await prisma.booking.findMany({
+      where,
+      include: {
+        user: { select: { name: true, email: true, phoneNumber: true } },
+        adSlot: { select: { title: true, category: true, pricePerDay: true } },
+        assets: true,
+        payment: true,
+        proofs: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+    })
+  } catch (err) {
+    console.error('[AdminDashboard] Database Query Error:', err)
+  }
 
   // Format Decimal to numbers for client components
   const formattedBookings = bookings.map((b) => ({
