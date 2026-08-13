@@ -189,6 +189,13 @@ export default async function ClientTrackingPage({
                   )}
                 </span>
               </div>
+
+              {booking.notes && (
+                <div className="pt-2 border-t border-white/10 space-y-1">
+                  <span className="text-amber-300 font-semibold block text-[11px]">📌 Catatan Khusus Request:</span>
+                  <p className="text-amber-100/90 text-xs italic whitespace-pre-wrap">{booking.notes}</p>
+                </div>
+              )}
             </div>
           </div>
 

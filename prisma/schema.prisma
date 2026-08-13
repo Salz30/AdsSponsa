@@ -102,6 +102,7 @@ model Booking {
   totalPrice      Decimal       @map("total_price") @db.Decimal(12, 2)
   status          BookingStatus @default(PENDING_PAYMENT)
   rejectionReason String?       @map("rejection_reason") @db.Text
+  notes           String?       @map("notes") @db.Text
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 

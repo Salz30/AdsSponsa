@@ -1,5 +1,6 @@
 import Navbar from '@/components/navbar'
 import CalendarPicker from '@/components/calendar-picker'
+import AdPlacementMockup from '@/components/ad-placement-mockup'
 import { prisma } from '@/lib/prisma'
 import { CATEGORY_LABELS, CATEGORY_ICONS, formatRupiah, BLOCKING_STATUSES } from '@/lib/utils'
 import { notFound } from 'next/navigation'
@@ -140,6 +141,12 @@ export default async function SlotDetailPage({
                 </div>
               </div>
             </div>
+
+            {/* Visual Placement Mockup Simulation */}
+            <AdPlacementMockup
+              category={slot.category}
+              slotTitle={slot.title}
+            />
           </div>
 
           {/* Right Column: Availability Calendar & Calculator */}
@@ -147,6 +154,8 @@ export default async function SlotDetailPage({
             <CalendarPicker
               slotId={slot.id}
               pricePerDay={Number(slot.pricePerDay)}
+              category={slot.category}
+              slotTitle={slot.title}
               blockedRanges={blockedRanges}
             />
           </div>

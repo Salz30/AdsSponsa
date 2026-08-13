@@ -16,12 +16,16 @@ interface BookingRange {
 interface CalendarPickerProps {
   slotId: number
   pricePerDay: number
+  category?: string
+  slotTitle?: string
   blockedRanges: BookingRange[]
 }
 
 export default function CalendarPicker({
   slotId,
   pricePerDay,
+  category = 'WEBSITE',
+  slotTitle = '',
   blockedRanges,
 }: CalendarPickerProps) {
   const router = useRouter()
@@ -52,7 +56,9 @@ export default function CalendarPicker({
     if (!range?.from || !range?.to) return
     const fromStr = format(range.from, 'yyyy-MM-dd')
     const toStr = format(range.to, 'yyyy-MM-dd')
-    router.push(`/slots/${slotId}/book?from=${fromStr}&to=${toStr}&price=${pricePerDay}`)
+    router.push(
+      `/slots/${slotId}/book?from=${fromStr}&to=${toStr}&price=${pricePerDay}&category=${category}&title=${encodeURIComponent(slotTitle)}`
+    )
   }
 
   return (

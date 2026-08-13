@@ -24,6 +24,7 @@ export const bookingSchema = z.object({
   targetUrl: z.string().url('URL tidak valid.').optional().or(z.literal('')),
   bankName: z.string().min(1, 'Nama bank wajib diisi.'),
   senderName: z.string().min(2, 'Nama pengirim minimal 2 karakter.'),
+  notes: z.string().optional(),
 })
 
 // Admin slot management

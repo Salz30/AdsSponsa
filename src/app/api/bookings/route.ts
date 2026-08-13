@@ -35,6 +35,7 @@ export async function POST(req: Request) {
     const campaignName = formData.get('campaignName') as string
     const brandName = formData.get('brandName') as string
     const targetUrl = formData.get('targetUrl') as string
+    const notes = (formData.get('notes') as string) || ''
     const bankName = formData.get('bankName') as string
     const senderName = formData.get('senderName') as string
 
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
       targetUrl: targetUrl || '',
       bankName,
       senderName,
+      notes,
     })
 
     if (!validation.success) {
@@ -153,6 +155,7 @@ export async function POST(req: Request) {
           campaignName,
           brandName,
           targetUrl: targetUrl || null,
+          notes: notes || null,
           startDate,
           endDate,
           totalPrice,

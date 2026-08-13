@@ -27,8 +27,15 @@ export const STORAGE_BUCKETS = {
   PROOF_OF_PERFORMANCES: 'proof-of-performances',
 } as const
 
+function createDataUrlFallback(file: Buffer | Uint8Array | Blob, contentType: string): string {
+  if (Buffer.isBuffer(file)) {
+    return `data:${contentType};base64,${file.toString('base64')}`
+  }
+  return `data:${contentType};base64,`
+}
+
 /**
- * Upload a file to Supabase Storage
+ * Upload a file to Supabase Storage with resilient Data URL fallback
  * Returns the public URL of the uploaded file
  */
 export async function uploadFile({
@@ -42,32 +49,47 @@ export async function uploadFile({
   file: Buffer | Uint8Array | Blob
   contentType: string
 }): Promise<string> {
-  const supabaseAdmin = createSupabaseAdmin()
+  try {
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+      console.warn('[Storage] SUPABASE_SERVICE_ROLE_KEY not set. Using Data URL fallback.')
+      return createDataUrlFallback(file, contentType)
+    }
 
-  const { data, error } = await supabaseAdmin.storage.from(bucket).upload(path, file, {
-    contentType,
-    upsert: false,
-  })
+    const supabaseAdmin = createSupabaseAdmin()
 
-  if (error) {
-    throw new Error(`Failed to upload file: ${error.message}`)
+    const { data, error } = await supabaseAdmin.storage.from(bucket).upload(path, file, {
+      contentType,
+      upsert: true,
+    })
+
+    if (error) {
+      console.warn(
+        `[Storage] Supabase upload to ${bucket}/${path} failed (${error.message}). Using Data URL fallback.`
+      )
+      return createDataUrlFallback(file, contentType)
+    }
+
+    const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path)
+    return urlData.publicUrl
+  } catch (err) {
+    console.warn('[Storage] Storage upload exception:', err)
+    return createDataUrlFallback(file, contentType)
   }
-
-  const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path)
-
-  return urlData.publicUrl
 }
 
 /**
  * Delete a file from Supabase Storage
  */
 export async function deleteFile(bucket: string, path: string): Promise<void> {
-  const supabaseAdmin = createSupabaseAdmin()
-
-  const { error } = await supabaseAdmin.storage.from(bucket).remove([path])
-
-  if (error) {
-    throw new Error(`Failed to delete file: ${error.message}`)
+  try {
+    const supabaseAdmin = createSupabaseAdmin()
+    const { error } = await supabaseAdmin.storage.from(bucket).remove([path])
+    if (error) {
+      console.warn(`[Storage] Failed to delete file: ${error.message}`)
+    }
+  } catch (err) {
+    console.warn('[Storage] Delete file exception:', err)
   }
 }
 

@@ -17,6 +17,7 @@ interface BookingData {
   totalPrice: number
   status: string
   rejectionReason: string | null
+  notes: string | null
   createdAt: string
   user: { name: string; email: string; phoneNumber: string | null }
   adSlot: { title: string; category: string; pricePerDay: number }
@@ -390,6 +391,18 @@ export default function AdminDashboardTable({
                 </span>
               </div>
             </div>
+
+            {/* Special Instructions / Notes */}
+            {selectedBooking.notes && (
+              <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs space-y-1">
+                <span className="font-bold text-amber-300 flex items-center gap-1.5">
+                  <span>📌</span> Catatan Khusus / Request Penayangan Pengiklan:
+                </span>
+                <p className="text-amber-100 whitespace-pre-wrap leading-relaxed">
+                  {selectedBooking.notes}
+                </p>
+              </div>
+            )}
 
             {/* Uploaded Material Preview */}
             <div className="space-y-2">

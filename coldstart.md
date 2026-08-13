@@ -255,7 +255,14 @@ erDiagram
 - **Admin Dashboard Visual Revamp:**
   - Perbaikan styling badge status menjadi translucent glowing pills (`rounded-full whitespace-nowrap`), mengeliminasi masalah teks terpotong/kotak putih kaku.
   - Kartu metrik diperbarui dengan icon badge glowing dan border gradient.
-- **Production Build Result:** `npx next build` lulus 100% (exit code 0, 11 routes compiled).
+- **Vercel Auth & Serverless Resilience (v1.5.0):**
+  - Opsi `trustHost: true` dan cookie HTTPS (`__Secure-next-auth.session-token`) pada `src/lib/auth.ts` untuk stabilitas autentikasi di domain produksi Vercel.
+  - Penanganan `VERCEL_URL` otomatis sebagai fallback `NEXTAUTH_URL` jika belum menggunakan custom domain.
+  - Konfigurasi `pg.Pool` dengan SSL production & `connectionTimeoutMillis: 5000` (fail-fast) untuk mencegah serverless hang.
+  - Refactoring `src/proxy.ts` menggunakan wrapper resmi NextAuth v5 `auth()` untuk sinkronisasi token otomatis antara Edge Proxy dan NextAuth handlers.
+  - Penggunaan full-page navigation (`window.location.href`) pada login & logout untuk menjamin sinkronisasi HTTP-Only cookie tanpa terganggu soft-navigation race condition atau expired preview URLs.
+  - Dokumentasi deployment panduan environment variable Vercel di `VERCEL_ENV_SETUP.md`.
+- **Production Build Result:** `npx next build` lulus 100% (exit code 0, 28 routes compiled).
 
 ---
 
@@ -280,3 +287,5 @@ erDiagram
 | 2026-08-11 | v1.2.0 | **Fase 2: Code Quality** (error boundaries, mobile navbar, admin pagination, Zod validations, price filter) | Done | Audit & build test PASSED |
 | 2026-08-11 | v1.3.0 | **Fase 3: Fitur Baru** (Admin CRUD AdSlots, Ekspor CSV Data, Halaman Tracking Search `/track`, SEO Metadata) | Done | Build `next build` PASSED |
 | 2026-08-11 | v1.4.0 | **Fase 4: UI/UX & Role Polish** (Admin direct login redirect, blokir Admin dari booking sponsor, redesign badge status translucent & glowing metric cards) | Done | Final build `next build` PASSED 100% |
+| 2026-08-12 | v1.5.0 | **Fase 5: Fix Vercel Auth & Production Resilience** (NextAuth v5 HTTPS secure cookies, `trustHost: true`, `VERCEL_URL` fallback, `pg.Pool` SSL & 5s timeout, NextAuth v5 `auth()` middleware in `src/proxy.ts`, full-page navigation on login/logout, `VERCEL_ENV_SETUP.md`) | Done | Build `next build` PASSED 100% |
+| 2026-08-13 | v1.6.0 | **Fase 6: Mentor Feedback & Visual Enhancement** (Ad placement mockups untuk IG Story/Web/Newsletter/Podcast, Live Upload Preview real-time, field Catatan Khusus `notes` pada booking & admin, resilient storage fallback, 1-click copy bank info) | Done | Build `next build` PASSED 100% |

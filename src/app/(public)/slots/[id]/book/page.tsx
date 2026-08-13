@@ -4,9 +4,9 @@ import { useState, use, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/navbar'
 import Link from 'next/link'
+import AdPlacementMockup from '@/components/ad-placement-mockup'
 import { calculateDays, formatRupiah } from '@/lib/utils'
-import { showLoadingAlert, showSuccessAlert, showErrorAlert, swalTheme } from '@/lib/swal'
-
+import { showLoadingAlert, showErrorAlert, swalTheme } from '@/lib/swal'
 import { useSession } from 'next-auth/react'
 
 function BookingWizard({ slotId }: { slotId: number }) {
@@ -14,6 +14,9 @@ function BookingWizard({ slotId }: { slotId: number }) {
   const isAdmin = session?.user?.role === 'ADMIN'
   const searchParams = useSearchParams()
   const router = useRouter()
+
+  const category = searchParams.get('category') || 'WEBSITE'
+  const slotTitle = searchParams.get('title') || 'Slot Iklan'
 
   const startDateStr = searchParams.get('from') || ''
   const endDateStr = searchParams.get('to') || ''
@@ -25,20 +28,39 @@ function BookingWizard({ slotId }: { slotId: number }) {
   const [campaignName, setCampaignName] = useState('')
   const [brandName, setBrandName] = useState('')
   const [targetUrl, setTargetUrl] = useState('')
+  const [notes, setNotes] = useState('')
 
   // Step 3 Data
   const [assetFile, setAssetFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // Step 4 Data
   const [bankName, setBankName] = useState('BCA')
   const [senderName, setSenderName] = useState('')
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null)
+  const [copiedBank, setCopiedBank] = useState(false)
 
   const startDate = startDateStr ? new Date(startDateStr) : new Date()
   const endDate = endDateStr ? new Date(endDateStr) : new Date()
   const totalDays = calculateDays(startDate, endDate)
   const pricePerDay = parseInt(searchParams.get('price') || '0', 10)
   const totalPrice = totalDays * pricePerDay
+
+  const handleAssetFileChange = (file: File | null) => {
+    setAssetFile(file)
+    if (file && file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+    } else {
+      setPreviewUrl(null)
+    }
+  }
+
+  const handleCopyBank = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedBank(true)
+    setTimeout(() => setCopiedBank(false), 2000)
+  }
 
   const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,6 +69,7 @@ function BookingWizard({ slotId }: { slotId: number }) {
       return
     }
 
+    setLoading(true)
     showLoadingAlert('Mengirim Pemesanan...')
 
     try {
@@ -57,6 +80,7 @@ function BookingWizard({ slotId }: { slotId: number }) {
       formData.append('campaignName', campaignName)
       formData.append('brandName', brandName)
       formData.append('targetUrl', targetUrl)
+      formData.append('notes', notes)
       formData.append('bankName', bankName)
       formData.append('senderName', senderName)
       formData.append('assetFile', assetFile)
@@ -81,12 +105,16 @@ function BookingWizard({ slotId }: { slotId: number }) {
         text: 'Mengalihkan ke portal tracking pemesanan Anda...',
         iconColor: '#34d399',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       })
-      
+
       router.push(`/track/${data.bookingCode}`)
-    } catch {
-      showErrorAlert('Terjadi kesalahan koneksi saat mengirim pemesanan.')
+    } catch (err: any) {
+      console.error('Submission Catch Error:', err)
+      showErrorAlert(
+        'Gagal Mengirim Pemesanan',
+        err?.message || 'Terjadi kesalahan pada koneksi server. Silakan periksa berkas dan coba lagi.'
+      )
       setLoading(false)
     }
   }
@@ -99,7 +127,9 @@ function BookingWizard({ slotId }: { slotId: number }) {
             <span className="text-2xl">⚙️</span>
             <div>
               <strong className="block text-amber-300 text-sm">Mode Peninjauan Admin</strong>
-              <p className="text-amber-200/80">Anda saat ini masuk sebagai Admin. Pemesanan slot iklan hanya diperuntukkan bagi akun Pengiklan (Advertiser).</p>
+              <p className="text-amber-200/80">
+                Anda saat ini masuk sebagai Admin. Pemesanan slot iklan hanya diperuntukkan bagi akun Pengiklan (Advertiser).
+              </p>
             </div>
           </div>
           <Link
@@ -192,10 +222,10 @@ function BookingWizard({ slotId }: { slotId: number }) {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">
-                Langkah 2: Informasi Kampanye
+                Langkah 2: Informasi Kampanye & Catatan Khusus
               </h2>
               <p className="text-xs text-purple-200/70">
-                Lengkapi identitas kampanye dan alamat URL tautan tujuan (CTA).
+                Lengkapi identitas kampanye, URL tujuan CTA, dan instruksi penayangan khusus.
               </p>
             </div>
 
@@ -209,7 +239,7 @@ function BookingWizard({ slotId }: { slotId: number }) {
                   required
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value)}
-                  placeholder="Contoh: Promo Promo Kemerdekaan Diskon 50%"
+                  placeholder="Contoh: Promo Kemerdekaan Diskon 50%"
                   className="w-full px-4 py-3 bg-slate-900/60 border border-white/10 rounded-xl text-white placeholder-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -240,6 +270,23 @@ function BookingWizard({ slotId }: { slotId: number }) {
                   className="w-full px-4 py-3 bg-slate-900/60 border border-white/10 rounded-xl text-white placeholder-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
+
+              {/* Special Instructions Field (Feedback Point #2) */}
+              <div>
+                <label className="block text-xs font-semibold text-purple-200 mb-1 flex justify-between">
+                  <span>CATATAN KHUSUS / REQUEST PENAYANGAN (OPSIONAL)</span>
+                  <span className="text-purple-400 font-normal text-[11px]">
+                    Mis. Jam upload, Tag/Collab akun IG, Hashtag
+                  </span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Contoh: Mohon di-upload tepat pukul 19:00 WIB, mohon tag & collab dengan akun IG @brandkita, sertakan link di story..."
+                  className="w-full px-4 py-3 bg-slate-900/60 border border-white/10 rounded-xl text-white placeholder-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs"
+                />
+              </div>
             </div>
 
             <div className="flex justify-between pt-4">
@@ -267,10 +314,10 @@ function BookingWizard({ slotId }: { slotId: number }) {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">
-                Langkah 3: Unggah Materi Iklan
+                Langkah 3: Unggah Materi Iklan & Live Preview
               </h2>
               <p className="text-xs text-purple-200/70">
-                Unggah berkas materi banner/audio/dokumen sesuai spesifikasi teknis slot.
+                Unggah berkas materi iklan Anda dan lihat simulasi tampilannya secara real-time di bawah.
               </p>
             </div>
 
@@ -278,7 +325,7 @@ function BookingWizard({ slotId }: { slotId: number }) {
               <input
                 type="file"
                 required
-                onChange={(e) => setAssetFile(e.target.files?.[0] || null)}
+                onChange={(e) => handleAssetFileChange(e.target.files?.[0] || null)}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
               />
               <span className="text-4xl block mb-2">📁</span>
@@ -286,8 +333,23 @@ function BookingWizard({ slotId }: { slotId: number }) {
                 {assetFile ? assetFile.name : 'Klik atau seret berkas materi iklan ke sini'}
               </span>
               <span className="block text-xs text-purple-400 mt-1">
-                {assetFile ? `${(assetFile.size / 1024 / 1024).toFixed(2)} MB` : 'Format sesuai ketentuan slot'}
+                {assetFile ? `${(assetFile.size / 1024 / 1024).toFixed(2)} MB` : 'Format PNG, JPG, MP3, atau PDF'}
               </span>
+            </div>
+
+            {/* Live Placement Mockup Preview (Feedback Point #1) */}
+            <div className="mt-6 pt-4 border-t border-white/10">
+              <span className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-3">
+                ✨ Live Placement Preview (Simulasi Tampilan Iklan Anda):
+              </span>
+              <AdPlacementMockup
+                category={category}
+                slotTitle={slotTitle}
+                previewUrl={previewUrl}
+                brandName={brandName || 'Nama Brand Anda'}
+                campaignName={campaignName || 'Judul Kampanye'}
+                targetUrl={targetUrl || 'https://brandanda.com'}
+              />
             </div>
 
             <div className="flex justify-between pt-4">
@@ -322,14 +384,23 @@ function BookingWizard({ slotId }: { slotId: number }) {
               </p>
             </div>
 
-            <div className="p-4 bg-purple-900/40 border border-purple-500/40 rounded-xl space-y-2">
+            <div className="p-4 bg-purple-900/40 border border-purple-500/40 rounded-xl space-y-2 relative">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-purple-300">Bank Tujuan:</span>
                 <span className="font-bold text-white">BCA (Bank Central Asia)</span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-purple-300">Nomor Rekening:</span>
-                <span className="font-mono font-bold text-yellow-300 text-sm">8830-1928-3341</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-yellow-300 text-sm">8830-1928-3341</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyBank('883019283341')}
+                    className="px-2 py-0.5 text-[10px] font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded transition-all"
+                  >
+                    {copiedBank ? '✓ Tersalin' : '📋 Salin'}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-purple-300">Atas Nama:</span>
@@ -393,12 +464,12 @@ function BookingWizard({ slotId }: { slotId: number }) {
   )
 }
 
-export default function BookingFormPage({
+export default async function BookingFormPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const resolvedParams = use(params)
+  const resolvedParams = await params
   const slotId = parseInt(resolvedParams.id, 10)
 
   return (
@@ -406,7 +477,13 @@ export default function BookingFormPage({
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full">
-        <Suspense fallback={<div className="text-center text-purple-300 py-12">Memuat formulir pemesanan...</div>}>
+        <Suspense
+          fallback={
+            <div className="text-center text-purple-300 py-12">
+              Memuat formulir pemesanan...
+            </div>
+          }
+        >
           <BookingWizard slotId={slotId} />
         </Suspense>
       </main>

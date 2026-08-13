@@ -71,6 +71,7 @@ export default async function AdminDashboardPage({
   // Format Decimal to numbers for client components
   const formattedBookings = bookings.map((b) => ({
     ...b,
+    notes: b.notes || null,
     totalPrice: Number(b.totalPrice),
     startDate: b.startDate.toISOString(),
     endDate: b.endDate.toISOString(),

@@ -6,10 +6,11 @@
 ## 1. Document Overview & Metadata
 
 * **Project Name:** Adsponsa (Sistem Manajemen Direct Sponsorship & Slot Media Lokal)
-* **Document Version:** 1.0.0
+* **Document Version:** 1.6.0
 * **Author:** Lead Product Developer
-* **Status:** Approved / Ready for Development
-* **Target Release Date:** Q3 2026
+* **Status:** Deployed & Production Ready (Vercel)
+* **Production URL:** `https://ads-sponsa.vercel.app`
+* **Target Release Date:** Q3 2026 (Completed)
 
 ---
 
@@ -300,12 +301,14 @@ erDiagram
 
 ---
 
-## 9. Recommended Tech Stack for Solo Developer
+## 9. Implemented Tech Stack & Infrastructure (v1.5.0)
 
-* **Frontend & Backend (Monolith/Fullstack):** Laravel (PHP) atau Next.js / Nuxt.js (Fullstack JavaScript).
-* **Database:** PostgreSQL / MySQL.
-* **Storage:** Local Storage atau Cloud Object Storage (S3 / Supabase Storage / Cloudinary) untuk file materi iklan.
-* **Styling & UI Components:** Tailwind CSS + Shadcn UI / DaisyUI.
+* **Frontend & Backend (Fullstack):** Next.js 16 (App Router) & React 19 (TypeScript 5.8).
+* **Styling:** Tailwind CSS v4 + `@tailwindcss/postcss`.
+* **Database & ORM:** Supabase PostgreSQL via `@prisma/adapter-pg` & Prisma 7 ORM (Connection Pooler port 6543).
+* **Authentication:** NextAuth.js v5 (JWT Strategy, Credentials Provider, `trustHost: true`, HTTPS Secure Cookies `__Secure-next-auth.session-token`).
+* **Storage:** Supabase Storage Buckets (`ad-assets`, `payment-proofs`, `proof-of-performances`).
+* **Deployment & Serverless:** Vercel Platform (`src/proxy.ts` NextAuth v5 Middleware, fail-fast `pg.Pool` SSL, full-page navigation login/logout flow).
 
 ---
 
