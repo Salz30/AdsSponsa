@@ -147,21 +147,43 @@ export async function POST(req: Request) {
 
     // 3. DATABASE ATOMIC TRANSACTION
     const result = await prisma.$transaction(async (tx) => {
-      const booking = await tx.booking.create({
-        data: {
-          bookingCode,
-          userId: parseInt(session.user.id, 10),
-          adSlotId: slotId,
-          campaignName,
-          brandName,
-          targetUrl: targetUrl || null,
-          notes: notes || null,
-          startDate,
-          endDate,
-          totalPrice,
-          status: 'PENDING_REVIEW', // After uploading payment proof, status is PENDING_REVIEW
-        },
-      })
+      let booking
+      try {
+        booking = await tx.booking.create({
+          data: {
+            bookingCode,
+            userId: parseInt(session.user.id, 10),
+            adSlotId: slotId,
+            campaignName,
+            brandName,
+            targetUrl: targetUrl || null,
+            notes: notes || null,
+            startDate,
+            endDate,
+            totalPrice,
+            status: 'PENDING_REVIEW', // After uploading payment proof, status is PENDING_REVIEW
+          },
+        })
+      } catch (createErr: any) {
+        console.warn(
+          '[Booking API] Creating booking with notes field failed. Retrying without notes column:',
+          createErr?.message
+        )
+        booking = await tx.booking.create({
+          data: {
+            bookingCode,
+            userId: parseInt(session.user.id, 10),
+            adSlotId: slotId,
+            campaignName,
+            brandName,
+            targetUrl: targetUrl || null,
+            startDate,
+            endDate,
+            totalPrice,
+            status: 'PENDING_REVIEW',
+          },
+        })
+      }
 
       await tx.adAsset.create({
         data: {
