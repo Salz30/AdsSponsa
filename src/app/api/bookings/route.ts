@@ -10,6 +10,8 @@ import {
 import { uploadFile, STORAGE_BUCKETS, generateStoragePath } from '@/lib/supabase'
 import { bookingSchema } from '@/lib/validations'
 
+export const maxDuration = 60
+
 export async function POST(req: Request) {
   try {
     const session = await auth()
