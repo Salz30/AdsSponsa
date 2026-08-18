@@ -6,7 +6,7 @@
 ## 1. Document Overview & Metadata
 
 * **Project Name:** Adsponsa (Sistem Manajemen Direct Sponsorship & Slot Media Lokal)
-* **Document Version:** 2.0.0
+* **Document Version:** 2.1.0
 * **Author:** Lead Product Developer
 * **Status:** Deployed & Production Ready (Vercel)
 * **Production URL:** `https://ads-sponsa.vercel.app`

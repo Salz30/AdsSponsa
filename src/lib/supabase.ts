@@ -27,11 +27,9 @@ export const STORAGE_BUCKETS = {
   PROOF_OF_PERFORMANCES: 'proof-of-performances',
 } as const
 
-function createDataUrlFallback(file: Buffer | Uint8Array | Blob, contentType: string): string {
-  if (Buffer.isBuffer(file)) {
-    return `data:${contentType};base64,${file.toString('base64')}`
-  }
-  return `data:${contentType};base64,`
+function createDataUrlFallback(path: string): string {
+  const sanitizedPath = path.replace(/[^a-zA-Z0-9/._-]/g, '_')
+  return `/uploads/fallback/${sanitizedPath}`
 }
 
 /**
@@ -52,8 +50,8 @@ export async function uploadFile({
   try {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!serviceRoleKey) {
-      console.warn('[Storage] SUPABASE_SERVICE_ROLE_KEY not set. Using Data URL fallback.')
-      return createDataUrlFallback(file, contentType)
+      console.warn('[Storage] SUPABASE_SERVICE_ROLE_KEY not set. Using path fallback.')
+      return createDataUrlFallback(path)
     }
 
     const supabaseAdmin = createSupabaseAdmin()
@@ -65,16 +63,16 @@ export async function uploadFile({
 
     if (error) {
       console.warn(
-        `[Storage] Supabase upload to ${bucket}/${path} failed (${error.message}). Using Data URL fallback.`
+        `[Storage] Supabase upload to ${bucket}/${path} failed (${error.message}). Using path fallback.`
       )
-      return createDataUrlFallback(file, contentType)
+      return createDataUrlFallback(path)
     }
 
     const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path)
     return urlData.publicUrl
   } catch (err) {
     console.warn('[Storage] Storage upload exception:', err)
-    return createDataUrlFallback(file, contentType)
+    return createDataUrlFallback(path)
   }
 }
 

@@ -219,10 +219,11 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     )
-  } catch (error) {
-    console.error('Booking Creation Error:', error)
+  } catch (error: any) {
+    console.error('[Booking API Error]:', error)
+    const detail = error?.message || 'Terjadi kesalahan pada server.'
     return NextResponse.json(
-      { message: 'Gagal membuat pemesanan. Terjadi kesalahan pada server.' },
+      { message: `Gagal membuat pemesanan: ${detail}` },
       { status: 500 }
     )
   }
