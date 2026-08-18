@@ -37,7 +37,36 @@ export default async function ClientTrackingPage({
       },
     })
   } catch (err) {
-    console.error('[ClientTrackingPage] Database Query Error:', err)
+    console.warn('[ClientTrackingPage] Retrying findUnique without notes column:', err)
+    try {
+      booking = await prisma.booking.findUnique({
+        where: { bookingCode: booking_code },
+        select: {
+          id: true,
+          bookingCode: true,
+          userId: true,
+          adSlotId: true,
+          campaignName: true,
+          brandName: true,
+          targetUrl: true,
+          startDate: true,
+          endDate: true,
+          totalPrice: true,
+          status: true,
+          rejectionReason: true,
+          createdAt: true,
+          updatedAt: true,
+          adSlot: true,
+          assets: true,
+          payment: true,
+          proofs: {
+            orderBy: { uploadedAt: 'desc' },
+          },
+        },
+      })
+    } catch (e2) {
+      console.error('[ClientTrackingPage] Fallback query error:', e2)
+    }
   }
 
   if (!booking) notFound()

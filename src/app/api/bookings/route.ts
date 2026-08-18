@@ -95,6 +95,9 @@ export async function POST(req: Request) {
           },
         ],
       },
+      select: {
+        id: true,
+      },
     })
 
     if (overlappingBookings.length > 0) {

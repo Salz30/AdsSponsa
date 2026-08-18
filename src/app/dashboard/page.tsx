@@ -32,7 +32,33 @@ export default async function AdvertiserDashboardPage() {
       orderBy: { createdAt: 'desc' },
     })
   } catch (err) {
-    console.error('[AdvertiserDashboard] Database Query Error:', err)
+    console.warn('[AdvertiserDashboard] Retrying findMany without notes column:', err)
+    try {
+      bookings = await prisma.booking.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          bookingCode: true,
+          userId: true,
+          adSlotId: true,
+          campaignName: true,
+          brandName: true,
+          targetUrl: true,
+          startDate: true,
+          endDate: true,
+          totalPrice: true,
+          status: true,
+          rejectionReason: true,
+          createdAt: true,
+          updatedAt: true,
+          adSlot: true,
+          proofs: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+    } catch (e2) {
+      console.error('[AdvertiserDashboard] Fallback query error:', e2)
+    }
   }
 
   return (
