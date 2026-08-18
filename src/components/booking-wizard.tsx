@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -22,6 +22,7 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [assetUploading, setAssetUploading] = useState(false)
 
   // Step 2 Data
   const [campaignName, setCampaignName] = useState('')
@@ -29,12 +30,17 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
   const [targetUrl, setTargetUrl] = useState('')
   const [notes, setNotes] = useState('')
 
-  // Step 3 Data
+  // Step 3 Data — file selection
   const [assetFile, setAssetFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
+  // Step 3 — after upload to /api/upload
+  const [assetUrl, setAssetUrl] = useState<string | null>(null)
+  const [assetFileType, setAssetFileType] = useState<string>('')
+  const [assetFileSizeKb, setAssetFileSizeKb] = useState<number>(0)
+
   // Step 4 Data
-  const [bankName, setBankName] = useState('BCA')
+  const [bankName] = useState('BCA')
   const [senderName, setSenderName] = useState('')
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null)
   const [copiedBank, setCopiedBank] = useState(false)
@@ -45,19 +51,20 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
   const pricePerDay = parseInt(searchParams.get('price') || '0', 10)
   const totalPrice = totalDays * pricePerDay
 
-  const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024 // 4 MB limit per file for Vercel Serverless
+  const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024 // 4 MB per file
 
   const handleAssetFileChange = (file: File | null) => {
     if (file && file.size > MAX_FILE_SIZE_BYTES) {
       showErrorAlert(
         'Ukuran Berkas Terlalu Besar',
-        `Berkas "${file.name}" (${(file.size / 1024 / 1024).toFixed(1)} MB) melebihi batas maksimal 4 MB Vercel. Harap kompres/pilih berkas yang lebih kecil.`
+        `Berkas "${file.name}" (${(file.size / 1024 / 1024).toFixed(1)} MB) melebihi batas maksimal 4 MB. Harap kompres/pilih berkas yang lebih kecil.`
       )
       setAssetFile(null)
       setPreviewUrl(null)
       return
     }
     setAssetFile(file)
+    setAssetUrl(null) // Reset URL when file changes
     if (file && file.type.startsWith('image/')) {
       const url = URL.createObjectURL(file)
       setPreviewUrl(url)
@@ -70,7 +77,7 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
     if (file && file.size > MAX_FILE_SIZE_BYTES) {
       showErrorAlert(
         'Ukuran Berkas Terlalu Besar',
-        `Bukti transfer (${(file.size / 1024 / 1024).toFixed(1)} MB) melebihi batas maksimal 4 MB Vercel. Harap gunakan tangkapan layar (screenshot) dengan ukuran di bawah 4 MB.`
+        `Bukti transfer (${(file.size / 1024 / 1024).toFixed(1)} MB) melebihi batas maksimal 4 MB. Harap gunakan tangkapan layar (screenshot) dengan ukuran di bawah 4 MB.`
       )
       setPaymentProofFile(null)
       return
@@ -84,44 +91,20 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
     setTimeout(() => setCopiedBank(false), 2000)
   }
 
-  const handleSubmitBooking = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!assetFile || !paymentProofFile) {
-      showErrorAlert('Berkas Tidak Lengkap', 'Harap unggah berkas materi iklan dan bukti transfer.')
-      return
-    }
+  // Upload asset file separately, then advance to step 4
+  const handleUploadAssetAndAdvance = async () => {
+    if (!assetFile) return
 
-    const totalSizeMb = (assetFile.size + paymentProofFile.size) / (1024 * 1024)
-    if (totalSizeMb > 4.2) {
-      showErrorAlert(
-        'Ukuran Berkas Terlalu Besar',
-        `Total ukuran berkas materi dan bukti bayar (${totalSizeMb.toFixed(1)} MB) melebihi batas 4.2 MB Vercel Serverless. Harap kompres foto/berkas Anda dan coba lagi.`
-      )
-      return
-    }
-
-    setLoading(true)
-    showLoadingAlert('Mengirim Pemesanan...')
+    setAssetUploading(true)
+    showLoadingAlert('Mengunggah Materi Iklan...')
 
     try {
-      const formData = new FormData()
-      formData.append('slotId', slotId.toString())
-      formData.append('startDate', startDateStr)
-      formData.append('endDate', endDateStr)
-      formData.append('campaignName', campaignName)
-      formData.append('brandName', brandName)
-      formData.append('targetUrl', targetUrl)
-      formData.append('notes', notes)
-      formData.append('bankName', bankName)
-      formData.append('senderName', senderName)
-      formData.append('assetFile', assetFile)
-      formData.append('paymentProofFile', paymentProofFile)
+      const fd = new FormData()
+      fd.append('file', assetFile)
+      fd.append('fileType', 'asset')
+      fd.append('tempId', `TMP-${Date.now()}`)
 
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        body: formData,
-      })
-
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
       const rawText = await res.text()
       let data: any = {}
       try {
@@ -129,22 +112,118 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
       } catch {
         if (res.status === 413 || rawText.includes('Request Entity Too Large')) {
           showErrorAlert(
-            'Ukuran Berkas Terlalu Besar (413)',
-            'Total berkas yang Anda unggah melebihi batas 4.5 MB Vercel Serverless. Harap kompres foto/berkas Anda dan coba lagi.'
+            'Berkas Terlalu Besar (413)',
+            'Materi iklan melebihi batas 4.5 MB Vercel. Harap kompres berkas dan coba lagi.'
           )
-          setLoading(false)
           return
         }
-        showErrorAlert(
-          'Gagal Mengirim Pemesanan',
-          'Terjadi kesalahan server saat memproses pemesanan. Silakan periksa ukuran berkas Anda dan coba lagi.'
-        )
-        setLoading(false)
+        showErrorAlert('Upload Gagal', 'Terjadi kesalahan server. Silakan coba lagi.')
         return
       }
 
       if (!res.ok) {
-        showErrorAlert('Gagal', data.message || 'Pemesanan gagal dibuat.')
+        showErrorAlert('Upload Materi Gagal', data.message || 'Gagal mengunggah materi iklan. Silakan coba lagi.')
+        return
+      }
+
+      setAssetUrl(data.url)
+      setAssetFileType(data.fileType || assetFile.type)
+      setAssetFileSizeKb(data.fileSizeKb || Math.round(assetFile.size / 1024))
+      swalTheme.close()
+      setStep(4)
+    } catch (err: any) {
+      showErrorAlert('Upload Gagal', err?.message || 'Terjadi kesalahan koneksi. Silakan coba lagi.')
+    } finally {
+      setAssetUploading(false)
+    }
+  }
+
+  const handleSubmitBooking = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!paymentProofFile) {
+      showErrorAlert('Berkas Tidak Lengkap', 'Harap unggah bukti transfer sebelum mengirim pemesanan.')
+      return
+    }
+    if (!assetUrl) {
+      showErrorAlert(
+        'Materi Iklan Belum Diunggah',
+        'Harap kembali ke Langkah 3 dan unggah ulang materi iklan terlebih dahulu.'
+      )
+      return
+    }
+
+    setLoading(true)
+    showLoadingAlert('Mengunggah Bukti Transfer...')
+
+    try {
+      // Step A — Upload proof file separately
+      const fd = new FormData()
+      fd.append('file', paymentProofFile)
+      fd.append('fileType', 'proof')
+      fd.append('tempId', `TMP-${Date.now()}`)
+
+      const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd })
+      const uploadRaw = await uploadRes.text()
+      let uploadData: any = {}
+      try {
+        uploadData = JSON.parse(uploadRaw)
+      } catch {
+        if (uploadRes.status === 413 || uploadRaw.includes('Request Entity Too Large')) {
+          showErrorAlert(
+            'Ukuran Berkas Terlalu Besar (413)',
+            'Ukuran bukti transfer melebihi batas 4.5 MB. Harap gunakan screenshot yang lebih kecil dan coba lagi.'
+          )
+          setLoading(false)
+          return
+        }
+        showErrorAlert('Upload Gagal', 'Terjadi kesalahan server. Silakan coba lagi.')
+        setLoading(false)
+        return
+      }
+
+      if (!uploadRes.ok) {
+        showErrorAlert('Upload Bukti Gagal', uploadData.message || 'Gagal mengunggah bukti transfer. Silakan coba lagi.')
+        setLoading(false)
+        return
+      }
+
+      const proofUrl = uploadData.url
+      showLoadingAlert('Menyimpan Data Pemesanan...')
+
+      // Step B — Submit booking as lightweight JSON (no binary files)
+      const bookingRes = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slotId,
+          startDate: startDateStr,
+          endDate: endDateStr,
+          campaignName,
+          brandName,
+          targetUrl,
+          notes,
+          bankName,
+          senderName,
+          assetUrl,
+          assetFileType,
+          assetFileSizeKb,
+          proofUrl,
+        }),
+      })
+
+      const bookingRaw = await bookingRes.text()
+      let bookingData: any = {}
+      try {
+        bookingData = JSON.parse(bookingRaw)
+      } catch {
+        showErrorAlert('Gagal Menyimpan Pemesanan', 'Terjadi kesalahan server saat menyimpan data. Silakan coba lagi.')
+        setLoading(false)
+        return
+      }
+
+      if (!bookingRes.ok) {
+        showErrorAlert('Gagal', bookingData.message || 'Pemesanan gagal dibuat.')
         setLoading(false)
         return
       }
@@ -158,12 +237,12 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
         showConfirmButton: false,
       })
 
-      router.push(`/track/${data.bookingCode}`)
+      router.push(`/track/${bookingData.bookingCode}`)
     } catch (err: any) {
       console.error('Submission Catch Error:', err)
       showErrorAlert(
         'Gagal Mengirim Pemesanan',
-        err?.message || 'Terjadi kesalahan pada koneksi server. Silakan periksa berkas dan coba lagi.'
+        err?.message || 'Terjadi kesalahan pada koneksi server. Silakan coba lagi.'
       )
       setLoading(false)
     }
@@ -214,7 +293,7 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">
-                Langkah 1: Konfirmasi Tanggal & Slot
+                Langkah 1: Konfirmasi Tanggal &amp; Slot
               </h2>
               <p className="text-xs text-purple-200/70">
                 Periksa kembali tanggal penayangan dan estimasi total biaya iklan Anda.
@@ -272,7 +351,7 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
           >
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">
-                Langkah 2: Detail Kampanye & Request Khusus
+                Langkah 2: Detail Kampanye &amp; Request Khusus
               </h2>
               <p className="text-xs text-purple-200/70">
                 Isi informasi kampanye brand Anda dan catatan spesifik untuk pengelola media.
@@ -356,16 +435,10 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
 
         {/* STEP 3 */}
         {step === 3 && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              setStep(4)
-            }}
-            className="space-y-6"
-          >
+          <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">
-                Langkah 3: Unggah Materi Iklan & Live Preview
+                Langkah 3: Unggah Materi Iklan &amp; Live Preview
               </h2>
               <p className="text-xs text-purple-200/70">
                 Unggah berkas foto/desain iklan dan lihat simulasi tampilan di frame penayangan.
@@ -379,11 +452,15 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
                 </label>
                 <input
                   type="file"
-                  required
                   accept="image/*,video/mp4"
                   onChange={(e) => handleAssetFileChange(e.target.files?.[0] || null)}
                   className="w-full text-xs text-purple-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer"
                 />
+                {assetUrl && (
+                  <p className="mt-1 text-[10px] text-emerald-400 font-semibold">
+                    ✅ Materi berhasil diunggah. Lanjut ke Pembayaran.
+                  </p>
+                )}
               </div>
 
               {/* LIVE PLACEMENT MOCKUP PREVIEW */}
@@ -415,14 +492,15 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
                 ← Kembali
               </button>
               <button
-                type="submit"
-                disabled={!assetFile}
+                type="button"
+                onClick={handleUploadAssetAndAdvance}
+                disabled={!assetFile || assetUploading}
                 className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl shadow-lg transition-all"
               >
-                Lanjut ke Pembayaran →
+                {assetUploading ? '⏳ Mengunggah Materi...' : '⬆️ Unggah & Lanjut ke Pembayaran →'}
               </button>
             </div>
-          </form>
+          </div>
         )}
 
         {/* STEP 4 */}
@@ -430,7 +508,7 @@ export default function BookingWizard({ slotId }: { slotId: number }) {
           <form onSubmit={handleSubmitBooking} className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">
-                Langkah 4: Pembayaran & Unggah Bukti
+                Langkah 4: Pembayaran &amp; Unggah Bukti
               </h2>
               <p className="text-xs text-purple-200/70">
                 Lakukan transfer bank sesuai nominal total lalu unggah foto bukti transfer.
