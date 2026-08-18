@@ -27,14 +27,11 @@ export const STORAGE_BUCKETS = {
   PROOF_OF_PERFORMANCES: 'proof-of-performances',
 } as const
 
-function createDataUrlFallback(path: string): string {
-  const sanitizedPath = path.replace(/[^a-zA-Z0-9/._-]/g, '_')
-  return `/uploads/fallback/${sanitizedPath}`
-}
 
 /**
- * Upload a file to Supabase Storage with resilient Data URL fallback
- * Returns the public URL of the uploaded file
+ * Upload a file to Supabase Storage.
+ * Returns the public URL of the uploaded file.
+ * Throws an error if upload fails so the caller can return a proper error to the client.
  */
 export async function uploadFile({
   bucket,
@@ -47,33 +44,29 @@ export async function uploadFile({
   file: Buffer | Uint8Array | Blob
   contentType: string
 }): Promise<string> {
-  try {
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceRoleKey) {
-      console.warn('[Storage] SUPABASE_SERVICE_ROLE_KEY not set. Using path fallback.')
-      return createDataUrlFallback(path)
-    }
-
-    const supabaseAdmin = createSupabaseAdmin()
-
-    const { data, error } = await supabaseAdmin.storage.from(bucket).upload(path, file, {
-      contentType,
-      upsert: true,
-    })
-
-    if (error) {
-      console.warn(
-        `[Storage] Supabase upload to ${bucket}/${path} failed (${error.message}). Using path fallback.`
-      )
-      return createDataUrlFallback(path)
-    }
-
-    const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path)
-    return urlData.publicUrl
-  } catch (err) {
-    console.warn('[Storage] Storage upload exception:', err)
-    return createDataUrlFallback(path)
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error(
+      'Konfigurasi cloud storage belum selesai (SUPABASE_SERVICE_ROLE_KEY tidak ditemukan). Hubungi administrator untuk mengatur environment variable di Vercel.'
+    )
   }
+
+  const supabaseAdmin = createSupabaseAdmin()
+
+  const { data, error } = await supabaseAdmin.storage.from(bucket).upload(path, file, {
+    contentType,
+    upsert: true,
+  })
+
+  if (error) {
+    console.error(`[Storage] Supabase upload to ${bucket}/${path} failed:`, error.message)
+    throw new Error(
+      `Gagal mengunggah berkas ke cloud storage (bucket: ${bucket}): ${error.message}`
+    )
+  }
+
+  const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path)
+  return urlData.publicUrl
 }
 
 /**

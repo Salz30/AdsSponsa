@@ -412,19 +412,35 @@ export default function AdminDashboardTable({
               {selectedBooking.assets.length === 0 ? (
                 <p className="text-xs text-purple-300/60">Tidak ada materi file.</p>
               ) : (
-                selectedBooking.assets.map((asset) => (
-                  <div key={asset.id} className="p-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-between text-xs">
-                    <span className="font-mono text-purple-200 truncate max-w-xs">{asset.filePath}</span>
-                    <a
-                      href={asset.filePath}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg text-[11px]"
-                    >
-                      Buka Berkas ↗
-                    </a>
-                  </div>
-                ))
+                selectedBooking.assets.map((asset) => {
+                  const isFallback = asset.filePath.startsWith('/uploads/fallback/')
+                  return (
+                    <div key={asset.id} className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono text-purple-200 truncate max-w-xs">{asset.filePath}</span>
+                        {isFallback ? (
+                          <span className="px-3 py-1 bg-red-900/50 border border-red-500/30 text-red-300 font-semibold rounded-lg text-[11px]">
+                            ⚠️ File Tidak Tersedia
+                          </span>
+                        ) : (
+                          <a
+                            href={asset.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg text-[11px]"
+                          >
+                            Buka Berkas ↗
+                          </a>
+                        )}
+                      </div>
+                      {isFallback && (
+                        <p className="text-[10px] text-red-300/80 bg-red-950/30 border border-red-500/20 rounded-lg px-3 py-2">
+                          ❌ Materi iklan gagal tersimpan ke cloud storage saat upload. Supabase Storage belum dikonfigurasi di environment produksi. Minta pengiklan untuk mengirim ulang pemesanan setelah storage dikonfigurasi.
+                        </p>
+                      )}
+                    </div>
+                  )
+                })
               )}
             </div>
 
@@ -433,26 +449,42 @@ export default function AdminDashboardTable({
               <h4 className="text-xs font-bold text-white uppercase tracking-wider">
                 Bukti Transfer Bank ({selectedBooking.payment?.bankName || 'BCA'}):
               </h4>
-              {selectedBooking.payment ? (
-                <div className="p-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="block text-white font-bold">
-                      Pengirim: {selectedBooking.payment.senderName}
-                    </span>
-                    <span className="block text-purple-300 text-[10px]">
-                      Nominal: {formatRupiah(selectedBooking.payment.amount)}
-                    </span>
+              {selectedBooking.payment ? (() => {
+                const isFallback = selectedBooking.payment.proofFilePath.startsWith('/uploads/fallback/')
+                return (
+                  <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <div>
+                        <span className="block text-white font-bold">
+                          Pengirim: {selectedBooking.payment.senderName}
+                        </span>
+                        <span className="block text-purple-300 text-[10px]">
+                          Nominal: {formatRupiah(selectedBooking.payment.amount)}
+                        </span>
+                      </div>
+                      {isFallback ? (
+                        <span className="px-3 py-1 bg-red-900/50 border border-red-500/30 text-red-300 font-semibold rounded-lg text-[11px]">
+                          ⚠️ File Tidak Tersedia
+                        </span>
+                      ) : (
+                        <a
+                          href={selectedBooking.payment.proofFilePath}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg text-[11px]"
+                        >
+                          Lihat Bukti Bayar ↗
+                        </a>
+                      )}
+                    </div>
+                    {isFallback && (
+                      <p className="text-[10px] text-red-300/80 bg-red-950/30 border border-red-500/20 rounded-lg px-3 py-2">
+                        ❌ Bukti transfer gagal tersimpan ke cloud storage saat upload. Supabase Storage belum dikonfigurasi di environment produksi. Minta pengiklan untuk mengirim ulang pemesanan setelah storage dikonfigurasi.
+                      </p>
+                    )}
                   </div>
-                  <a
-                    href={selectedBooking.payment.proofFilePath}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg text-[11px]"
-                  >
-                    Lihat Bukti Bayar ↗
-                  </a>
-                </div>
-              ) : (
+                )
+              })() : (
                 <p className="text-xs text-purple-300/60">Bukti pembayaran belum diunggah.</p>
               )}
             </div>
